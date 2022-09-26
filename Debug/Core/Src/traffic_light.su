@@ -1,0 +1,8 @@
+../Core/Src/traffic_light.c:19:6:trafficLightSetDuration	16	static
+../Core/Src/traffic_light.c:23:10:trafficLightGetDuration	16	static
+../Core/Src/traffic_light.c:27:6:trafficLightUpdate	8	static
+../Core/Src/traffic_light.c:62:6:trafficLightInit	24	static
+../Core/Src/traffic_light.c:72:6:trafficLightStart	8	static
+../Core/Src/traffic_light.c:78:6:isButtonAllowed	8	static
+../Core/Src/traffic_light.c:82:7:getCurrentColor	4	static
+../Core/Src/traffic_light.c:86:6:setDurationRED	16	static

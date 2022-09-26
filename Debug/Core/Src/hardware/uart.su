@@ -1,0 +1,4 @@
+../Core/Src/hardware/uart.c:10:6:recieve	8	static
+../Core/Src/hardware/uart.c:21:6:transmit	16	static
+../Core/Src/hardware/uart.c:31:6:HAL_UART_RxCpltCallback	16	static
+../Core/Src/hardware/uart.c:37:6:HAL_UART_TxCpltCallback	48	dynamic

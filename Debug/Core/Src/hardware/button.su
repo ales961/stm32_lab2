@@ -1,0 +1,4 @@
+../Core/Src/hardware/button.c:7:6:buttonInit	16	static
+../Core/Src/hardware/button.c:13:6:buttonSetOnClick	16	static
+../Core/Src/hardware/button.c:17:6:buttonIsPressed	8	static
+../Core/Src/hardware/button.c:23:6:buttonUpdateState	16	static

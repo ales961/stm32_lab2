@@ -1,0 +1,9 @@
+../Core/Src/hardware/led.c:17:13:ledInit	48	static
+../Core/Src/hardware/led.c:24:6:ledUpdateState	24	static
+../Core/Src/hardware/led.c:46:6:ledSetState	16	static
+../Core/Src/hardware/led.c:53:6:ledSetPeriod	16	static
+../Core/Src/hardware/led.c:61:6:ledSetStateDuration	16	static
+../Core/Src/hardware/led.c:70:10:ledGetState	16	static
+../Core/Src/hardware/led.c:74:6:ledFinishedLightning	16	static
+../Core/Src/hardware/led.c:78:13:ledToggleState	16	static
+../Core/Src/hardware/led.c:83:13:ledHardwareSet	16	static

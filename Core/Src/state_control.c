@@ -14,18 +14,18 @@ int setTimeoutFlag = 0;
 
 int timeout;
 
-void check() {
-	int16_t n = buffer_elements();
+void check(struct buffer* buffer) {
+	int8_t n = buffer_elements(buffer);
 	if (n <= 0) return;
 
 	if(n > 20) {
-	    buffer_clear();
+	    buffer_clear(buffer);
 	    transmit("ERROR");
 	    return;
 	}
 
 	char buf_part[n];
-	memcpy(buf_part, getBuffer(), n);
+	memcpy(buf_part, buffer->data, n);
 
 
 	if (setModeFlag == 1) {
@@ -38,7 +38,7 @@ void check() {
 		} else {
 			transmit("ERROR");
 		}
-		buffer_clear();
+		buffer_clear(buffer);
 		setModeFlag = 0;
 		return;
 	}
@@ -52,39 +52,35 @@ void check() {
 			} else {
 				transmit("ERROR");
 			}
-			buffer_clear();
+			buffer_clear(buffer);
 		}
 		return;
 	}
 
 	if (strcmp(buf_part, "?") == 0) {
-		transmit(color_names[getCurrentColor()]);
-		char mode_str[10];
-		sprintf(mode_str, "mode %d", mode);
-		transmit(mode_str);
-		char timeout_str[10];
-		sprintf(timeout_str, "timeout %d", (int) trafficLightGetDuration(RED));
-		transmit(timeout_str);
-		if (interruptsEnabled == 1) {
-			transmit("I");
-		} else {
-			transmit("P");
-		}
-		buffer_clear();
+		char state_str[50];
+		char interrupt = (interruptsEnabled == 1) ? 'I' : 'P';
+		sprintf(state_str, "\n%s\n\rmode %d\n\rtimeout %d\n\r%c\n\r",
+				color_names[getCurrentColor()],
+				mode,
+				(int) trafficLightGetDuration(RED),
+				interrupt);
+		transmit(state_str);
+		buffer_clear(buffer);
 	} else if (strcmp(buf_part, "set mode ") == 0) {
 		setModeFlag = 1;
-		buffer_clear();
+		buffer_clear(buffer);
 	} else if (strcmp(buf_part, "set timeout ") == 0) {
 		setTimeoutFlag = 2;
-		buffer_clear();
+		buffer_clear(buffer);
 	} else if (strcmp(buf_part, "set interrupts on") == 0) {
 		__enable_irq();
 		interruptsEnabled = 1;
-		buffer_clear();
+		buffer_clear(buffer);
 	} else if (strcmp(buf_part, "set interrupts off") == 0) {
 		__disable_irq();
 		interruptsEnabled = 0;
-		buffer_clear();
+		buffer_clear(buffer);
 	}
 }
 

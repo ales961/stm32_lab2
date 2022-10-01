@@ -1,37 +1,37 @@
 #include "buffer.h"
 
-int8_t ptr_in = 0;
-int8_t ptr_out = 0;
 
-char buffer[BUFSIZE];
-
-void buffer_push(char value) {
-    buffer[ptr_in++] = value;
-    if (ptr_in >= BUFSIZE) ptr_in = 0;
+struct buffer buffer_create() {
+    return (struct buffer) {
+        .data = malloc(sizeof(uint8_t) * BUFSIZE),
+        .ptr_in = 0,
+        .ptr_out = 0
+    };
 }
 
-char buffer_pop() {
-    char ret = buffer[ptr_out++];
-    if (ptr_out >= BUFSIZE) ptr_out = 0;
+void buffer_push(struct buffer* buffer, uint8_t value) {
+    buffer->data[buffer->ptr_in++] = value;
+    if (buffer->ptr_in >= BUFSIZE) buffer->ptr_in = 0;
+}
+
+uint8_t buffer_pop(struct buffer* buffer) {
+    uint8_t ret = buffer->data[buffer->ptr_out++];
+    if (buffer->ptr_out >= BUFSIZE) buffer->ptr_out = 0;
     return ret;
 }
 
-char buffer_get() {
-    return buffer[ptr_out];
+uint8_t buffer_get(struct buffer* buffer) {
+    return buffer->data[buffer->ptr_out];
 }
 
-void buffer_clear() {
-    ptr_in = 0;
-    ptr_out = 0;
+void buffer_clear(struct buffer* buffer) {
+    buffer->ptr_in = 0;
+    buffer->ptr_out = 0;
 }
 
-int16_t buffer_elements() {
-    if (ptr_in >= ptr_out)
-        return (ptr_in - ptr_out);
+int8_t buffer_elements(struct buffer* buffer) {
+    if (buffer->ptr_in >= buffer->ptr_out)
+        return (buffer->ptr_in - buffer->ptr_out);
     else
-        return ((BUFSIZE - ptr_out) + ptr_in);
-}
-
-char* getBuffer() {
-    return buffer;
+        return ((BUFSIZE - buffer->ptr_out) + buffer->ptr_in);
 }

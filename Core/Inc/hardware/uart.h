@@ -3,6 +3,7 @@
 
 #include "usart.h"
 
+void uart_buffersInit();
 void recieve();
 void transmit(char msg[]);
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);

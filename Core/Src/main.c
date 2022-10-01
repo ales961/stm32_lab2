@@ -107,6 +107,7 @@ int main(void)
   buttonInit(nBtn_GPIO_Port, nBtn_Pin);
   buttonSetOnClick(&onButtonClick);
   trafficLightStart();
+  uart_buffersInit();
   __disable_irq();
   /* USER CODE END 2 */
 

@@ -3,34 +3,40 @@
 #include "buffer.h"
 #include "state_control.h"
 
-char nextByte;
+uint8_t nextByte;
 char transmitBuffer[512];
 int needToTransmit = 0;
+
+struct buffer buffer;
+
+void uart_buffersInit() {
+	buffer = buffer_create();
+}
 
 void recieve() {
 	if (getInterruptsEnabled() == 1) {
 		HAL_UART_Receive_IT(&huart6, &nextByte, 1);
 	} else {
 		if (HAL_UART_Receive(&huart6, &nextByte, 1, 10) == HAL_OK) {
-			buffer_push(nextByte);
-			check();
+			buffer_push(&buffer, nextByte);
+			check(&buffer);
 		}
 	}
 }
 
 void transmit(char msg[]) {
 	if (getInterruptsEnabled() == 1) {
-		if (HAL_UART_Transmit_IT(&huart6, (uint8_t*) msg, sizeof(msg)) != HAL_OK) {
+		if (HAL_UART_Transmit_IT(&huart6, (uint8_t*) msg, strlen(msg)) != HAL_OK) {
 			strcat(transmitBuffer, msg);
 		}
 	} else {
-		HAL_UART_Transmit(&huart6, (uint8_t*) msg, sizeof(msg), 10);
+		HAL_UART_Transmit(&huart6, (uint8_t*) msg, strlen(msg), 10);
 	}
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart == &huart6) {
-		check();
+		check(&buffer);
 	}
 }
 

@@ -5,7 +5,7 @@
 
 void uart_buffersInit();
 void recieve();
-void transmit(char msg[]);
+void transmit(uint8_t* msg);
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
 

@@ -20,7 +20,7 @@ void check(struct buffer* buffer) {
 
 	if(n > 20) {
 	    buffer_clear(buffer);
-	    transmit("ERROR");
+	    transmit((uint8_t*) "ERROR");
 	    return;
 	}
 
@@ -31,12 +31,12 @@ void check(struct buffer* buffer) {
 	if (setModeFlag == 1) {
 		if (strcmp(buf_part, "1") == 0) {
 			mode = 1;
-			transmit("OK");
+			transmit((uint8_t*) "OK");
 		} else if (strcmp(buf_part, "2") == 0) {
 			mode = 2;
-			transmit("OK");
+			transmit((uint8_t*) "OK");
 		} else {
-			transmit("ERROR");
+			transmit((uint8_t*) "ERROR");
 		}
 		buffer_clear(buffer);
 		setModeFlag = 0;
@@ -48,9 +48,9 @@ void check(struct buffer* buffer) {
 			timeout = atoi(buf_part);
 			if (timeout > 0) {
 				setDurationRED(timeout*1000);
-				transmit("OK");
+				transmit((uint8_t*) "OK");
 			} else {
-				transmit("ERROR");
+				transmit((uint8_t*) "ERROR");
 			}
 			buffer_clear(buffer);
 		}
@@ -58,9 +58,9 @@ void check(struct buffer* buffer) {
 	}
 
 	if (strcmp(buf_part, "?") == 0) {
-		char state_str[50];
+		uint8_t state_str[50];
 		char interrupt = (interruptsEnabled == 1) ? 'I' : 'P';
-		sprintf(state_str, "\n%s\n\rmode %d\n\rtimeout %d\n\r%c\n\r",
+		sprintf((char*) state_str, "\n%s\n\rmode %d\n\rtimeout %d\n\r%c\n\r",
 				color_names[getCurrentColor()],
 				mode,
 				(int) trafficLightGetDuration(RED),

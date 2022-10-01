@@ -1,5 +1,5 @@
 ../Core/Src/hardware/uart.c:12:6:uart_buffersInit	24	static
-../Core/Src/hardware/uart.c:16:6:recieve	8	static
-../Core/Src/hardware/uart.c:27:6:transmit	16	static
-../Core/Src/hardware/uart.c:37:6:HAL_UART_RxCpltCallback	16	static
-../Core/Src/hardware/uart.c:43:6:HAL_UART_TxCpltCallback	48	dynamic
+../Core/Src/hardware/uart.c:17:6:recieve	8	static
+../Core/Src/hardware/uart.c:28:6:transmit	24	static
+../Core/Src/hardware/uart.c:40:6:HAL_UART_RxCpltCallback	16	static
+../Core/Src/hardware/uart.c:46:6:HAL_UART_TxCpltCallback	24	static

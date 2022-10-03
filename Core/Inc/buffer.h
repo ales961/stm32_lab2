@@ -3,19 +3,18 @@
 
 #include <stdint.h>
 
-#define BUFSIZE 256
+typedef struct Buffer Buffer;
 
-struct buffer {
-    uint8_t* data;
-    int8_t ptr_in;
-    int8_t ptr_out;
-};
-
-struct buffer buffer_create();
-void buffer_push(struct buffer* buffer, uint8_t value);
-uint8_t buffer_pop(struct buffer* buffer);
-uint8_t buffer_get(struct buffer* buffer);
-void buffer_clear(struct buffer* buffer);
-int8_t buffer_elements(struct buffer* buffer);
+Buffer * bufferCreate(uint16_t buffSize);
+uint8_t bufferPush(Buffer *buffer, uint8_t value);
+uint16_t bufferPushValues(Buffer *buffer, const uint8_t *values, uint16_t size);
+uint8_t bufferPop(Buffer *buffer);
+uint8_t bufferPeek(const Buffer *buffer);
+void bufferClear(Buffer *buffer);
+uint16_t bufferGetSize(const Buffer *buffer);
+uint16_t bufferPopValues(Buffer *buffer, uint8_t *buf, uint16_t bufSize);
+uint8_t bufferHasValues(const Buffer *buffer);
+uint16_t bufferGetFreeSize(const Buffer *buffer);
+uint16_t bufferPeekValues(const Buffer * buffer, uint8_t **values);
 
 #endif

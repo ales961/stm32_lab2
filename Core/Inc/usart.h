@@ -29,7 +29,7 @@ extern "C" {
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+#include <inttypes.h>
 /* USER CODE END Includes */
 
 extern UART_HandleTypeDef huart6;
@@ -41,6 +41,15 @@ extern UART_HandleTypeDef huart6;
 void MX_USART6_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+
+uint16_t uartReceive(uint8_t *buffer, uint16_t size);
+uint16_t uartTransmit(const uint8_t *msg, uint16_t msgSize);
+uint8_t uartHasNext();
+void uartEnableInterruption();
+void uartDisableInterruption();
+void uartInit();
+void uartPooling();
+uint8_t uartIsInterruptionEnabled();
 
 /* USER CODE END Prototypes */
 

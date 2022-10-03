@@ -17,7 +17,7 @@ static void ledToggleState(Led *led);
 struct Led* ledInit(LedState initState, GPIO_TypeDef* port, uint16_t pin) {
     Led *led = (Led *) malloc(sizeof(Led));
     *led = (Led) { .state = initState, .startTime = 0, .duration = 0, .period = 0, .port = port, .pin = pin };
-    ledSetState(led, initState);
+    ledSetStateConstantly(led, initState);
     return led;
 }
 
@@ -30,7 +30,7 @@ void ledUpdateState(Led *led) {
     if (led->period > 0 && delta >= led->period) {
         led->duration -= led->period;
         if (led->duration <= 0) {
-            ledSetState(led, LED_TURN_OFF);
+        	ledSetStateConstantly(led, LED_TURN_OFF);
             led->period = 0;
             led->duration = 0;
         } else {
@@ -43,7 +43,13 @@ void ledUpdateState(Led *led) {
     }
 }
 
-void ledSetState(Led *led, LedState state) {
+uint32_t ledGetLightningTime(const Led * const led) {
+    if (led->state != LED_TURN_ON)
+        return 0;
+    return HAL_GetTick() - led->startTime;
+}
+
+void ledSetStateConstantly(Led *led, LedState state) {
     led->state = state;
     led->duration = 0;
     led->period = 0;
@@ -58,7 +64,7 @@ void ledSetPeriod(Led *led, uint16_t period, uint16_t duration) {
     ledHardwareSet(led);
 }
 
-void ledSetStateDuration(Led *led, LedState state, uint16_t duration) {
+void ledSetStateWithDuration(Led *led, LedState state, uint16_t duration) {
     led->state = state;
     led->period = 0;
     led->duration = duration;
@@ -71,7 +77,7 @@ LedState ledGetState(Led *led) {
     return led->state;
 }
 
-bool ledFinishedLightning(Led *led) {
+uint8_t ledFinishedLightning(Led *led) {
     return led->duration == 0 && led->period == 0;
 }
 

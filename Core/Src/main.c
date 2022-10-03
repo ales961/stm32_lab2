@@ -23,9 +23,14 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
+#include <stdio.h>
+#include <inttypes.h>
+
 #include "traffic_light.h"
 #include "hardware/button.h"
-#include "hardware/uart.h"
+#include "command.h"
+#include "menu.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -35,9 +40,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define RED_DURATION_START 6000
-#define YELLOW_DURATION_START 1500
-#define GREEN_DURATION_START 1500
+#define UART_BUF_SIZE 128
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,22 +51,35 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-static uint16_t durations[3] = {
-        [RED] = RED_DURATION_START,
-        [YELLOW] = YELLOW_DURATION_START,
-        [GREEN] = GREEN_DURATION_START
+static uint8_t uartBuf[UART_BUF_SIZE];
+static uint8_t uartBufLast = 0;
+static uint8_t buttonEnabled = 1;
+static uint8_t hasLine = 0;
+static Command *commands[4];
+
+static uint32_t durations[3] = {
+        [RED] = 6000,
+        [YELLOW] = 1500,
+        [GREEN] = 1500
 };
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+static char * getTrafficLightInfo();
+static char * changeButtonMode(const uint32_t *intArg);
+static char * changeInterruptionMode(const OnOffStatus *onOffStatus);
+static char * changeRedTimeout(const uint32_t *intArg);
 static void onButtonClick();
+static void sendMessage(const char * msg);
+static void receiveAndSendChar();
+static void sendCommandResult(const char * commandResult);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 /**
@@ -73,7 +89,10 @@ static void onButtonClick();
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  commands[0] = commandCreate("?", (CommandAction) getTrafficLightInfo, NONE);
+  commands[1] = commandCreate("set mode", (CommandAction) changeButtonMode, INT);
+  commands[2] = commandCreate("set interrupts", (CommandAction) changeInterruptionMode, ON_OFF);
+  commands[3] = commandCreate("set timeout", (CommandAction) changeRedTimeout, INT);
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -96,27 +115,48 @@ int main(void)
   MX_GPIO_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-  trafficLightInit(
-		  redLed_GPIO_Port, redLed_Pin,
-		  yellowLed_GPIO_Port, yellowLed_Pin,
-		  greenLed_GPIO_Port, greenLed_Pin
-  );
+  uartInit();
+
+  trafficLightInit(LED_RED_GPIO_Port, LED_RED_Pin, LED_YELLOW_GPIO_Port, LED_YELLOW_Pin, LED_GREEN_GPIO_Port, LED_GREEN_Pin);
   trafficLightSetDuration(RED, durations[RED]);
   trafficLightSetDuration(GREEN, durations[GREEN]);
   trafficLightSetDuration(YELLOW, durations[YELLOW]);
-  buttonInit(nBtn_GPIO_Port, nBtn_Pin);
-  buttonSetOnClick(&onButtonClick);
   trafficLightStart();
-  uart_buffersInit();
-  __disable_irq();
+
+  buttonInit(BTN_N_GPIO_Port, BTN_N_Pin);
+  buttonSetOnClick(&onButtonClick);
+  buttonEnable();
+
+  menuInit(commands, sizeof(commands));
+  sendMessage("Started\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)  {
-	  recieve();
+	  if (trafficLightGetColor() == GREEN && !trafficLightIsBlinking())
+		  buttonDisable();
+	  else {
+		  if (buttonEnabled)
+			  buttonEnable();
+		  else
+			  buttonDisable();
+	  }
+
 	  trafficLightUpdate();
 	  buttonUpdateState();
+	  uartPooling();
+
+	  if (uartHasNext()) {
+		  receiveAndSendChar();
+	  }
+
+	  if (hasLine) {
+		  uartBuf[uartBufLast] = '\0';
+		  const char *commandResult = menuExecuteCommand((char *) uartBuf);
+		  sendMessage("\n");
+		  sendCommandResult(commandResult);
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -169,10 +209,80 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 static void onButtonClick() {
-	if (isButtonAllowed()) {
-		durations[RED] >>= 2;
-		trafficLightSetDuration(RED, durations[RED]);
-	}
+    trafficLightSetShortRed(durations[RED] >> 2);
+}
+
+static char cmdBuf[128];
+static char * getTrafficLightInfo() {
+    char *bufLast = cmdBuf;
+    uint8_t isBlinking = trafficLightIsBlinking();
+    char *currentColor = colorGetName(trafficLightGetColor());
+    bufLast += sprintf(bufLast, "Light: %s%s\n",
+            isBlinking ? "blinking " : "",
+            currentColor
+    );
+    bufLast += sprintf(bufLast, "Button mode: mode %" PRIu8 " (%s)\n",
+                       buttonIsEnabled() + 1,
+                       buttonIsEnabled() ? "enabled" : "disabled"
+    );
+    bufLast += sprintf(bufLast, "Red timeout: %" PRIu32 " s\n",
+                       durations[RED] / (uint32_t) 1000
+    );
+    bufLast += sprintf(bufLast, "Interrupts mode: %s\n\r",
+                       uartIsInterruptionEnabled()  ? "I" : "P"
+    );
+    return cmdBuf;
+}
+
+static char * changeButtonMode(const uint32_t *intArg) {
+    if (*intArg == 2) {
+        buttonEnabled = 1;
+        return "Enable button\n";
+    } else if (*intArg == 1) {
+        buttonEnabled = 0;
+        return "Disable button\n";
+    } else {
+        return "The int argument must be 1 or 2\n";
+    }
+}
+
+static char * changeInterruptionMode(const OnOffStatus *onOffStatus) {
+    if (*onOffStatus == ON) {
+        uartEnableInterruption();
+        return "Enable int\n";
+    } else if (*onOffStatus == OFF) {
+        uartDisableInterruption();
+        return "Disable int\n";
+    } else {
+        return "The argument must be 'on' or 'off'\n";
+    }
+}
+
+static char * changeRedTimeout(const uint32_t *intArg) {
+    durations[RED] = *intArg * 1000;
+    trafficLightSetDuration(RED, durations[RED]);
+    return "OK\n";
+}
+
+static void sendMessage(const char * msg) {
+    uartTransmit((uint8_t *) msg, strlen(msg));
+}
+
+static void receiveAndSendChar() {
+    if (uartReceive(uartBuf + uartBufLast, 1)) {
+        uint8_t received = uartBuf[uartBufLast];
+        uartBufLast++;
+        uartTransmit(&received, 1);
+
+        if (received == '\r')
+            hasLine = 1;
+    }
+}
+
+static void sendCommandResult(const char * commandResult) {
+    uartTransmit((uint8_t *) commandResult, strlen(commandResult));
+    uartBufLast = 0;
+    hasLine = 0;
 }
 /* USER CODE END 4 */
 

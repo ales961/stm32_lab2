@@ -1,6 +1,0 @@
-../Core/Src/buffer.c:4:15:buffer_create	24	static
-../Core/Src/buffer.c:12:6:buffer_push	16	static
-../Core/Src/buffer.c:17:9:buffer_pop	24	static
-../Core/Src/buffer.c:23:9:buffer_get	16	static
-../Core/Src/buffer.c:27:6:buffer_clear	16	static
-../Core/Src/buffer.c:32:8:buffer_elements	16	static
